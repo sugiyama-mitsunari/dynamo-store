@@ -17,7 +17,7 @@ module ActiveSupport
       DEFAULT_TTL_KEY = 'TTL'
       CONTENT_KEY = 'b_item_value'
 
-      attr_reader :data, :dynamodb_client, :hash_key, :ttl_key, :table_name
+      attr_reader :data, :dynamodb_client, :hash_key, :ttl_key, :table_name, :consistent_read
 
       # Instantiate the store.
       #
@@ -29,7 +29,8 @@ module ActiveSupport
       #     table_name: 'CacheTable',
       #     dynamo_client: client,
       #     hash_key: 'name',
-      #     ttl_key: 'key_ttl'
+      #     ttl_key: 'key_ttl',
+      #     consistent_read: true
       #   )
       #
       def initialize(
@@ -37,6 +38,7 @@ module ActiveSupport
         dynamo_client: nil,
         hash_key: DEFAULT_HASH_KEY,
         ttl_key: DEFAULT_TTL_KEY,
+        consistent_read: false,
         **opts
       )
         super(opts)
@@ -44,6 +46,7 @@ module ActiveSupport
         @dynamodb_client = dynamo_client || Aws::DynamoDB::Client.new
         @ttl_key         = ttl_key
         @hash_key        = hash_key
+        @consistent_read = consistent_read
       end
 
       protected
@@ -52,7 +55,7 @@ module ActiveSupport
         result = dynamodb_client.get_item(
           key: { hash_key => name },
           table_name: table_name,
-          consistent_read: true,
+          consistent_read: consistent_read,
         )
 
         return if result.item.nil? || result.item[CONTENT_KEY].nil?
