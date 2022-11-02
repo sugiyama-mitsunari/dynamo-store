@@ -52,6 +52,7 @@ module ActiveSupport
         result = dynamodb_client.get_item(
           key: { hash_key => name },
           table_name: table_name,
+          consistent_read: true,
         )
 
         return if result.item.nil? || result.item[CONTENT_KEY].nil?
